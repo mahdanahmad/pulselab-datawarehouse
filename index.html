@@ -26,45 +26,53 @@
     <div id="root">
         <div id="spinnerOverlay"></div>
         <div id="wrapper">
-			<div id="sidebar-container">
-				<div id="sidebar-wrapper">
-					<div id="sidebar-title" class="noselect">
+			<div id="chart-container">
+				<div id="filter-container">
+					<div id="filter-title" class="noselect">
 						<i class="fa fa-home" aria-hidden="true"></i> Data Warehouse
 					</div>
-					<div id="sidebar-time">
-						<div class="filter-head noselect">Time filter</div>
+					<div id="filter-time">
+						<div class="filter-head cursor-default noselect">Time filter</div>
 						<div id="timepicker-container">
 							<div id="time-value">
 								<input type="text" id="startpicker" class="cursor-pointer"><span class="cursor-default"> - </span><input type="text" id="endpicker" class="cursor-pointer">
 							</div>
 						</div>
 					</div>
-					<div id="sidebar-numtags">
-						<div class="filter-head noselect">Number of Tags filter</div>
+					<div id="filter-datatype">
+						<div class="filter-head cursor-default noselect">Type filter</div>
+						<div id="types-container"></div>
+					</div>
+					<div id="filter-frequency">
+						<div class="filter-head cursor-default noselect">Frequency filter</div>
+						<div id="frequency-container"></div>
+					</div>
+				</div>
+				<div id="informations-container">
+					<div id="button-changer" class="noselect cursor-pointer">See datasets</div>
+					<div id="stacked-container">
+						<!-- <div id="stacked-chart"/></div> -->
+					</div>
+					<div id="datasets-wrapper">
+                        <div id="datasets-container"></div>
+                    </div>
+				</div>
+			</div>
+			<div id="selector-container">
+				<div id="relations-container">
+					<div id="graph-container">
+						<div id="graph-chart"></div>
+					</div>
+					<div id="filter-numtags">
+						<div id="numtags-head cursor-default noselect">Number of Tags</div>
 						<div id="numtags-container">
 							<div id="numtags-handle" class="ui-slider-handle noselect"></div>
 						</div>
 					</div>
-					<div id="graph-container"></div>
-					<div id="sidebar-datatype">
-						<div class="filter-head noselect">Type filter</div>
-						<div id="types-container"></div>
-					</div>
-					<div id="sidebar-frequency">
-						<div class="filter-head noselect">Frequency filter</div>
-						<div id="frequency-container"></div>
-					</div>
 				</div>
-			</div>
-			<div id="chart-container">
 				<div id="swimlane-container">
-                    <div id="button-changer" class="noselect cursor-pointer">See datasets</div>
-                    <div id="swimlane-chart"></div>
-                    <div id="datasets-wrapper">
-                        <div id="datasets-container"></div>
-                    </div>
+                    <!-- <div id="swimlane-chart"></div> -->
                 </div>
-				<div id="stacked-chart"/></div>
 			</div>
         </div>
     </div>

@@ -1,15 +1,15 @@
 #wrapper {
 	width: 100%; height: 100%;
-	#sidebar-container {
-		width: $sidebar-width; height: 100%; display: inline-block; float: left; background: $sidebar-color; overflow-x: auto;
-		#sidebar-wrapper {
-			padding: 40px 0px 20px 0px;
-			#sidebar-title {
-				width: 100%; text-align: center; text-transform: uppercase; font-family: "TradeGothic-Bold"; font-size: 20px;
+	#chart-container {
+		width: 100%; height: calc(100% - #{$selector-hgt}); @include clearfix();
+		#filter-container {
+			width: $sidebar-width; height: calc(100% - 20px); background: $sidebar-back; display: inline-block; float: left; padding: 10px 0px;
+			#filter-title {
+				width: 100%; text-align: center; text-transform: uppercase; font-family: "TradeGothic-Bold"; font-size: 18px;
 			}
-			#sidebar-time, #sidebar-numtags, #sidebar-datatype, #sidebar-frequency {
+			#filter-time, #filter-datatype, #filter-frequency {
 				width: 100%; margin: 15px 0px;
-				.filter-head { text-transform: uppercase; font-family: "TradeGothic-CondEighteen"; text-align: center; margin: 10px 0px; }
+				.filter-head { text-transform: uppercase; font-family: "TradeGothic-CondEighteen"; text-align: center; margin-bottom: 5px; }
 				#timepicker-container {
 					#time-value {
 						width: calc(100% - 100px); margin: 0px 50px; background: white; border-radius: 5px;
@@ -20,11 +20,7 @@
 						}
 					}
 				}
-				#numtags-container {
-					#numtags-handle {
-						width: 3em; height: 1.6em; top: 50%; margin-top: -.8em; text-align: center; line-height: 1.6em;
-					}
-				}
+
 				#types-container {
 					width: 300px; margin: auto;
 					.type-button {
@@ -35,44 +31,25 @@
 				#frequency-container {
 					padding: 0px 20px; width: calc(100% - 40px);
 					.freq-button {
-						display: inline-block; min-width: calc(20% - 8px); text-align: center; color: $active-color!important; padding: 5px 0px; margin: 3px; border-radius: 7px; border: 1px solid;
+						display: inline-block; width: calc(19% - 2px); text-align: center; color: $active-color!important; padding: 5px 0px; margin: 0.5%; border-radius: 7px; border: 1px solid;
 						&.freq-unactive { background: $active-color!important; color: black!important; }
+						&.freq-overflow { display: none; }
+						&#freq-showmore { background: $active-back; border-color: $active-back; }
 					}
 				}
 			}
-			#sidebar-numtags {
-				width: 90%; margin: auto;
-				.ui-state-active { background: $active-back; }
-				.ui-slider-range { background: $active-back; }
-				.ui-slider-handle { border-color: $active-back; }
-			}
-			#graph-container {
-				circle { fill: $circle-color; }
-				.nodes-selected { circle { fill: $active-back; } tspan { fill: $active-color; } }
-			}
 		}
-	}
-	#chart-container {
-		width: calc(100% - #{$sidebar-width}); display: inline-block; float: left;
-		#swimlane-container {
-			position: relative;
+		#informations-container {
+			position: relative; width: calc(100% - #{$sidebar-width}); height: 100%; background: $stacked-back; display: inline-block; float: left;
+			&.trans-background { background: transparent!important; }
 			#button-changer {
 				position: absolute; top: 7px; left: 15px; background: #ddd; padding: 5px 15px; font-size: 12px; border-radius: 5px;
 			}
-			#swimlane-chart {
-				#ceil-axis-container {
-
-				}
-				#floor-lane-container {
-					#separator-line { stroke: $swim-delimiter; }
-					.swimlane-lane {
-						stroke: $unactive-bar; stroke-width: 7;
-						&.swimlane-selected { stroke: $active-back; }
-					}
-				}
+			#stacked-container {
+				width: 100%; height: 100%;
 			}
 			#datasets-wrapper {
-				display: none; overflow-x: hidden; overflow-y: auto; position: relative; top: 35px;
+				display: none; overflow-x: hidden; overflow-y: auto; position: relative; top: 35px; width: 100%; height: calc(100% - 40px);
 				#datasets-container {
 					width: calc(100% - 20px); padding: 0px 15px 10px; @include clearfix();
 					div.data-container {
@@ -98,9 +75,42 @@
 				}
 			}
 		}
-		#stacked-chart {
-			position: absolute; bottom: 0px;
-			#stacked-svg { background: $stacked-back; }
+	}
+	#selector-container {
+		width: 100%; height: $selector-hgt;
+		#relations-container {
+			width: calc(100% - #{$swimlane-wdt}); height: 100%; display: inline-block; float: left; background: $relations-back;
+			#graph-container {
+				width: 100%; height: calc(100% - 50px);
+				#graph-chart {
+					circle { fill: $circle-color; }
+					.nodes-selected { circle { fill: $active-back; } tspan { fill: $active-color; } }
+				}
+			}
+			#filter-numtags {
+				width: 90%; margin: auto;
+				.ui-state-active { background: $active-back; }
+				.ui-slider-range { background: $active-back; }
+				.ui-slider-handle { border-color: $active-back; }
+				#numtags-container {
+					#numtags-handle {
+						width: 3em; height: 1.6em; top: 50%; margin-top: -.8em; text-align: center; line-height: 1.6em;
+					}
+				}
+			}
+		}
+		#swimlane-container {
+			width: $swimlane-wdt; height: 100%; display: inline-block; float: left;
+			#ceil-axis-container {
+
+			}
+			#floor-lane-container {
+				#separator-line { stroke: $swim-delimiter; }
+				.swimlane-lane {
+					stroke: $unactive-bar; stroke-width: 7;
+					&.swimlane-selected { stroke: $active-back; }
+				}
+			}
 		}
 	}
 }

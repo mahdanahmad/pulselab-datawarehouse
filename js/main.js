@@ -12,11 +12,10 @@ let frequencies = [];
 let freqColors  = [];
 let activeFreq  = [];
 let activeSec   = [];
+let freqLimt	= 10;
 let filter      = {
     type        : null,
 }
-
-let exclude     = ['China'];
 
 let freqTimeout, secTimeout;
 let freqTime	= 1000;
@@ -29,9 +28,6 @@ $(' #wrapper ').on('sector-change', (event, state, sector) => {
         activeSec.push(sector);
     } else if (state == 'remove') {
         _.pull(activeSec, sector);
-    } else if (state == 'write') {
-        activeSec   = [sector];
-        createSwimlane(rangeData, activeSec, activeFreq, startDate, endDate);
     }
 
 	secTimeout	= setTimeout(() => {
@@ -41,7 +37,7 @@ $(' #wrapper ').on('sector-change', (event, state, sector) => {
 		let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
 		let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
 		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, false, false, true, true, () => {
+		fetchData(numtags, startDate, endDate, false, false, true, true, null, () => {
 			$(' #spinnerOverlay ').hide();
 			spinner.stop();
 		});
@@ -60,13 +56,13 @@ $(document).on('click', '.type-button', (e) => {
     let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
     let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
 	let numtags		= $( '#numtags-container' ).slider( 'value' );
-	fetchData(numtags, startDate, endDate, true, false, true, false, () => {
+	fetchData(numtags, startDate, endDate, true, false, true, false, null, () => {
         $(' #spinnerOverlay ').hide();
         spinner.stop();
     });
 });
 
-$(document).on('click', '.freq-button', (e) => {
+$(document).on('click', '.freq-button:not(#freq-showmore)', (e) => {
 	clearTimeout(freqTimeout);
 
     let selected    = _.toInteger($(e.target).attr('value'));
@@ -85,7 +81,7 @@ $(document).on('click', '.freq-button', (e) => {
 		let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
 		let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
 		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, true, true, true, true, () => {
+		fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
 			$(' #spinnerOverlay ').hide();
 			spinner.stop();
 		});
@@ -94,20 +90,38 @@ $(document).on('click', '.freq-button', (e) => {
 });
 
 $(document).on('click', '#button-changer', (e) => {
-    if ($(' #swimlane-chart ').is(":visible")) {
-        $(' #swimlane-chart ').hide();
+    if ($(' #stacked-container ').is(":visible")) {
+        $(' #stacked-container ').hide();
         $(' #datasets-wrapper ').show();
 
-        $(' #button-changer ').html('See swimlane');
+		$(' #informations-container ').addClass('trans-background');
+        $(' #button-changer ').html('See informations');
     } else {
-        $(' #swimlane-chart ').show();
+        $(' #stacked-container ').show();
         $(' #datasets-wrapper ').hide();
 
+		$(' #informations-container ').removeClass('trans-background');
         $(' #button-changer ').html('See datasets');
     }
 });
 
-function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, isRedraw, callback) {
+$(document).on('click', '#freq-showmore', (e) => {
+	if ($(' .freq-overflow ').is(':visible')) {
+		$(' .freq-overflow ').hide();
+		$(' #freq-showmore ').html("more <i class='fa fa-angle-double-right' aria-hidden='true'></i>");
+
+		$(' #filter-time ').show();
+		$(' #filter-datatype ').show();
+	} else {
+		$(' .freq-overflow ').css('display', 'inline-block');
+		$(' #freq-showmore ').html("<i class='fa fa-angle-double-left' aria-hidden='true'></i> less");
+
+		$(' #filter-time ').hide();
+		$(' #filter-datatype ').hide();
+	}
+});
+
+function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, isRedraw, forceWidth, callback) {
 	async.waterfall([
 		function (waterfallCallback) {
 			$.get( baseURL + 'selector', { frequencies : JSON.stringify(activeFreq), datatype : filter.type, startDate, endDate, numtags }, (response) => {
@@ -120,7 +134,7 @@ function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, 
 				}
 
 				if (isForce) { createForce(response.result, activeSec); }
-				if (isSwimlane) { createSwimlane(response.result, activeSec, startDate, endDate); }
+				if (isSwimlane) { createSwimlane(response.result, activeSec, startDate, endDate, forceWidth); }
 				waterfallCallback(null, activeFreq, activeSec);
 			});
 		},
@@ -169,8 +183,8 @@ window.onload   = function() {
 
     $(' #filter-wrapper ').height($(' #wrapper ').outerHeight(true) / 2);
 
-    $(' #datasets-wrapper ').width($(' #chart-container ').outerWidth(true));
-    $(' #datasets-wrapper ').height($(' #wrapper ').outerHeight(true) / 2 - 40);
+    // $(' #datasets-wrapper ').width($(' #chart-container ').outerWidth(true));
+    // $(' #datasets-wrapper ').height($(' #wrapper ').outerHeight(true) / 2 - 40);
 
     fromPicker.datepicker( 'setDate', moment().subtract(6, 'year').startOf('year').toDate() );
     untilPicker.datepicker( 'setDate', '0' );
@@ -188,6 +202,32 @@ window.onload   = function() {
 
         redrawOnDatepickerChange();
     });
+
+	$(' #swimlane-container ').resizable({
+		animate: true,
+		handles: 'w',
+		helper: 'resizable-helper',
+		start: (event, ui) => {
+			$( '#graph-canvas' ).hide();
+			$( '#swimlane-canvas' ).hide();
+		},
+		resize: (event, ui) => {
+			ui.position.left	= 0;
+			$(' #relations-container ').css('width', 'calc(100% - ' + ui.size.width + 'px)');
+		},
+		stop: (event, ui) => {
+			let spinner     = new Spinner().spin(document.getElementById('root'));
+			$(' #spinnerOverlay ').show();
+
+			let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
+			let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
+			let numtags		= $( '#numtags-container' ).slider( 'value' );
+			fetchData(numtags, startDate, endDate, true, true, false, false, ui.helper.width(), () => {
+				$(' #spinnerOverlay ').hide();
+				spinner.stop();
+			});
+		}
+	});
 
 	let numtagsValue	= 20;
 	$( '#numtags-container' ).slider({
@@ -217,13 +257,14 @@ window.onload   = function() {
 
 		freqColors		= _.times(frequencies.length, (o) => ('#' + Math.random().toString(16).substr(2,6)));
 
-        let stringFreq  = _.map(frequencies, (o, idx) => ("<div id='freq-" + o + "' class='freq-button noselect cursor-pointer" + (_.includes(activeFreq, o) ? '' : ' freq-unactive') + "' style='background : " + freqColors[idx] + "; border-color : " + freqColors[idx] + "; color : " + freqColors[idx] + "' value='" + o + "'>" + o + "</div>"));
+        let stringFreq  = _.map(frequencies, (o, idx) => ("<div id='freq-" + o + "' class='freq-button noselect cursor-pointer" + (_.includes(activeFreq, o) ? '' : ' freq-unactive') + (idx >= (freqLimt - 1) ? ' freq-overflow' : '') + "' style='background : " + freqColors[idx] + "; border-color : " + freqColors[idx] + "; color : " + freqColors[idx] + "' value='" + o + "'>" + o + "</div>")).join('');
+		stringFreq		+= "<div id='freq-showmore' class='freq-button noselect cursor-pointer'>more <i class='fa fa-angle-double-right' aria-hidden='true'></i></div>"
         $(' #frequency-container ').append(stringFreq);
 
         let startDate   = $.datepicker.formatDate('yy-mm-dd', fromPicker.datepicker('getDate'));
         let endDate     = $.datepicker.formatDate('yy-mm-dd', untilPicker.datepicker('getDate'));
 		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, true, true, true, true, () => {
+		fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
             $(' #spinnerOverlay ').css('opacity', '0.7');
             $(' #spinnerOverlay ').hide();
             spinner.stop();
@@ -237,7 +278,7 @@ window.onload   = function() {
         let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
         let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
 		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, true, true, true, true, () => {
+		fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
             $(' #spinnerOverlay ').hide();
             spinner.stop();
         });

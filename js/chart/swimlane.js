@@ -1,32 +1,30 @@
-function createSwimlane(data, activeSec, startDate, endDate) {
+function createSwimlane(data, activeSec, startDate, endDate, forceWidth) {
     d3.select(' #swimlane-canvas ').remove();
     let datasets    = _.chain(data).flatMap('tags').uniq();
     let sectorsLeft = datasets.difference(activeSec).sortBy().value();
     let activeLeft  = datasets.intersection(activeSec).sortBy().value();
 	let localSec	= _.clone(activeLeft);
 
-    if (activeLeft.length == 0) {
-        $(' #wrapper ').trigger('sector-change', ['write', _.head(sectorsLeft)]);
-    } else {
+    if (activeLeft.length > 0) {
         let sectors     = _.concat(activeLeft, sectorsLeft);
         let dateFormat  = "%Y-%m-%_d";
         let padding     = { top: 5, right: 15, bottom: 10, left: 15 };
-        let width       = Math.floor($(' #chart-container ').outerWidth(true)) - padding.right - padding.left;
-        let height      = Math.floor($(' #wrapper ').outerHeight(true) / 2) - padding.top - padding.bottom;
+        let width       = !_.isNil(forceWidth) ? forceWidth : Math.floor($(' #swimlane-container ').outerWidth(true)) - padding.right - padding.left;
+        let height      = Math.floor($(' #swimlane-container ').outerHeight(true)) - padding.top - padding.bottom;
 
         let axisHeight  = 25;
         let laneHeight  = 25;
         let sectorFont  = 14;
         let sectorWidth = 135;
 
-        $(' #swimlane-chart ').width(width);
-        $(' #swimlane-chart ').height(height);
-        $(' #swimlane-chart ').css('padding', padding.top + 'px ' + padding.right + 'px ' + padding.bottom + 'px ' + padding.left + 'px');
+        // $(' #swimlane-chart ').width(width);
+        // $(' #swimlane-chart ').height(height);
+        // $(' #swimlane-chart ').css('padding', padding.top + 'px ' + padding.right + 'px ' + padding.bottom + 'px ' + padding.left + 'px');
 
         let d3DateParse = d3.timeParse(dateFormat);
         let x           = d3.scaleTime().domain([d3DateParse(startDate), d3DateParse(endDate)]).range([0, width - sectorWidth]);
 
-        let swimlane    = d3.select(' #swimlane-chart ')
+        let swimlane    = d3.select(' #swimlane-container ')
             .append('div')
             .attr('id', 'swimlane-canvas')
             .attr('width', width)
@@ -35,6 +33,8 @@ function createSwimlane(data, activeSec, startDate, endDate) {
         swimlane.append('svg')
             .attr('id', 'ceil-axis-container')
             .attr('style', 'width: ' + (width) + 'px; height: ' + axisHeight + 'px')
+			// .attr('preserveAspectRatio', 'none')
+			// .attr('viewBox', '0 0 ' + width + ' ' + height)
             .append('g')
                 .attr('transform', 'translate(' + sectorWidth + ', ' + (axisHeight - 5)  + ')')
                 .attr('class', 'ceil-axis-svg')

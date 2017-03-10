@@ -2,10 +2,10 @@ function createStacked(data, keys, freqColors) {
     $(' #spinnerOverlay ').show();
     d3.select(' #stacked-svg ').remove();
 
-    let legendHgt   = 0;
+    let flipperHgt	= 30;
     let padding     = { top: 15, right: 15, bottom: 15, left: 30 };
-    let width       = Math.floor($(' #chart-container ').outerWidth(true) - padding.right - padding.left);
-    let height      = Math.floor(($(' #wrapper ').outerHeight(true) / 2) - padding.top - padding.bottom - legendHgt);
+    let width       = Math.floor($(' #stacked-container ').outerWidth(true) - padding.right - padding.left);
+    let height      = Math.floor($(' #stacked-container ').outerHeight(true) - padding.top - padding.bottom - flipperHgt);
 
     if (_.size(data.timeline) > 0) {
         let dateFormat  = "%Y-%m-%_d";
@@ -21,12 +21,12 @@ function createStacked(data, keys, freqColors) {
         let xAxis       = d3.axisTop(x).tickSize(5);
         let yAxis       = d3.axisLeft(y).tickSize(3).tickFormat((d) => (d3.format('')(Math.abs(d))));
 
-        let svg = d3.select(' #stacked-chart ').append('svg')
+        let svg = d3.select(' #stacked-container ').append('svg')
             .attr('id', 'stacked-svg')
             .attr('width', width + padding.right + padding.left)
-            .attr('height', height + padding.top + padding.bottom + legendHgt)
+            .attr('height', height + padding.top + padding.bottom + flipperHgt)
             .append("g")
-                .attr('transform', 'translate(' + padding.left + ',' + padding.top + ')');
+                .attr('transform', 'translate(' + padding.left + ',' + (padding.top + flipperHgt) + ')');
 
         let barwidth    = width / moment(data.endDate).diff(moment(data.startDate), 'days');
         svg.append("g")
@@ -88,7 +88,7 @@ function createStacked(data, keys, freqColors) {
         d3.select(' #stacked-chart ').append('svg')
             .attr('id', 'stacked-svg')
             .attr('width', width + padding.right + padding.left)
-            .attr('height', height + padding.top + padding.bottom + legendHgt)
+            .attr('height', height + padding.top + padding.bottom + flipperHgt)
             .append('text')
                 .text('No tag selected.')
                 .attr('class', 'noselect cursor-default')

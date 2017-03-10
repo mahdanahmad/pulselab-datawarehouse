@@ -11,17 +11,17 @@ function createForce(data, activeSec) {
     let radiusrange = [15, 35];
     let linkrange   = [35, 15];
     let padding     = { top: 5, right: 15, bottom: 0, left: 15 };
-    let width       = Math.floor($(' #sidebar-container ').outerWidth(true)) - padding.right - padding.left;
-    let height      = Math.floor($(' #sidebar-container ').outerWidth(true)) - padding.top - padding.bottom;
+    let width       = Math.floor($(' #graph-container ').outerWidth(true)) - padding.right - padding.left;
+    let height      = Math.floor($(' #graph-container ').outerHeight(true)) - padding.top - padding.bottom;
 
-    $(' #graph-container ').width(width);
-    $(' #graph-container ').height(height);
-    $(' #graph-container ').css('padding', padding.top + 'px ' + padding.right + 'px ' + padding.bottom + 'px ' + padding.left + 'px');
+    $(' #graph-chart ').width(width);
+    $(' #graph-chart ').height(height);
+    $(' #graph-chart ').css('padding', padding.top + 'px ' + padding.right + 'px ' + padding.bottom + 'px ' + padding.left + 'px');
 
     let sizeScale   = d3.scaleLinear().domain([_.minBy(nodeData, 'count').count, _.maxBy(nodeData, 'count').count]).range(radiusrange);
     let lengthScale = d3.scaleLinear().domain([_.minBy(linkData, 'count').count, _.maxBy(linkData, 'count').count]).range(linkrange);
 
-    let forceSVG    = d3.select(' #graph-container ')
+    let forceSVG    = d3.select(' #graph-chart ')
         .append('svg')
         .attr('id', 'graph-canvas')
         .attr('width', width)
@@ -131,9 +131,6 @@ function createForce(data, activeSec) {
             $( '#node-' + _.kebabCase(sector) ).addClass( 'nodes-selected' );
         } else if (state == 'remove') {
             $( '#node-' + _.kebabCase(sector) ).removeClass( 'nodes-selected' );
-        } else if (state == 'write') {
-            $( '.node-nodes' ).removeClass( 'nodes-selected' );
-            $( '#node-' + _.kebabCase(sector) ).addClass( 'nodes-selected' );
         }
     });
 }
