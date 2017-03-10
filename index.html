@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"> -->
+
+    <link rel="shortcut icon" href="pulse.ico">
+    <link rel="stylesheet" href="stylesheets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/async/2.1.4/async.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.3/lodash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+
+    <!-- <script>$( function() { $( document ).tooltip(); } );</script> -->
+
+    <title>A Dashboard</title>
+</head>
+<body>
+    <div id="root">
+        <div id="spinnerOverlay"></div>
+        <div id="wrapper">
+			<div id="sidebar-container">
+				<div id="sidebar-wrapper">
+					<div id="sidebar-title" class="noselect">
+						<i class="fa fa-home" aria-hidden="true"></i> Data Warehouse
+					</div>
+					<div id="sidebar-time">
+						<div class="filter-head noselect">Time filter</div>
+						<div id="timepicker-container">
+							<div id="time-value">
+								<input type="text" id="startpicker" class="cursor-pointer"><span class="cursor-default"> - </span><input type="text" id="endpicker" class="cursor-pointer">
+							</div>
+						</div>
+					</div>
+					<div id="sidebar-numtags">
+						<div class="filter-head noselect">Number of Tags filter</div>
+						<div id="numtags-container">
+							<div id="numtags-handle" class="ui-slider-handle noselect"></div>
+						</div>
+					</div>
+					<div id="graph-container"></div>
+					<div id="sidebar-datatype">
+						<div class="filter-head noselect">Type filter</div>
+						<div id="types-container"></div>
+					</div>
+					<div id="sidebar-frequency">
+						<div class="filter-head noselect">Frequency filter</div>
+						<div id="frequency-container"></div>
+					</div>
+				</div>
+			</div>
+			<div id="chart-container">
+				<div id="swimlane-container">
+                    <div id="button-changer" class="noselect cursor-pointer">See datasets</div>
+                    <div id="swimlane-chart"></div>
+                    <div id="datasets-wrapper">
+                        <div id="datasets-container"></div>
+                    </div>
+                </div>
+				<div id="stacked-chart"/></div>
+			</div>
+        </div>
+    </div>
+    <script type="text/javascript" src="js/helpers/randomizer.js"></script>
+    <script type="text/javascript" src="js/chart/force.js"></script>
+    <script type="text/javascript" src="js/chart/swimlane.js"></script>
+    <script type="text/javascript" src="js/chart/stacked.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+#wrapper {
+	width: 100%; height: 100%;
+	#sidebar-container {
+		width: $sidebar-width; height: 100%; display: inline-block; float: left; background: $sidebar-color; overflow-x: auto;
+		#sidebar-wrapper {
+			padding: 40px 0px 20px 0px;
+			#sidebar-title {
+				width: 100%; text-align: center; text-transform: uppercase; font-family: "TradeGothic-Bold"; font-size: 20px;
+			}
+			#sidebar-time, #sidebar-numtags, #sidebar-datatype, #sidebar-frequency {
+				width: 100%; margin: 15px 0px;
+				.filter-head { text-transform: uppercase; font-family: "TradeGothic-CondEighteen"; text-align: center; margin: 10px 0px; }
+				#timepicker-container {
+					#time-value {
+						width: calc(100% - 100px); margin: 0px 50px; background: white; border-radius: 5px;
+						input {
+							border: none; height: 27px; background: transparent; text-align: center;
+							&#startpicker { border-right: 1px solid #ddd; }
+							&#endpicker { border-left: 1px solid #ddd; }
+						}
+					}
+				}
+				#numtags-container {
+					#numtags-handle {
+						width: 3em; height: 1.6em; top: 50%; margin-top: -.8em; text-align: center; line-height: 1.6em;
+					}
+				}
+				#types-container {
+					width: 300px; margin: auto;
+					.type-button {
+						width: calc(33% - 2px); display: inline-block; font-size: 12px; text-align: center; background: white; border-radius: 3px; margin: 1px; line-height: 25px;
+						&.type-active { background: $active-back; color: $active-color; }
+					}
+				}
+				#frequency-container {
+					padding: 0px 20px; width: calc(100% - 40px);
+					.freq-button {
+						display: inline-block; min-width: calc(20% - 8px); text-align: center; color: $active-color!important; padding: 5px 0px; margin: 3px; border-radius: 7px; border: 1px solid;
+						&.freq-unactive { background: $active-color!important; color: black!important; }
+					}
+				}
+			}
+			#sidebar-numtags {
+				width: 90%; margin: auto;
+				.ui-state-active { background: $active-back; }
+				.ui-slider-range { background: $active-back; }
+				.ui-slider-handle { border-color: $active-back; }
+			}
+			#graph-container {
+				circle { fill: $circle-color; }
+				.nodes-selected { circle { fill: $active-back; } tspan { fill: $active-color; } }
+			}
+		}
+	}
+	#chart-container {
+		width: calc(100% - #{$sidebar-width}); display: inline-block; float: left;
+		#swimlane-container {
+			position: relative;
+			#button-changer {
+				position: absolute; top: 7px; left: 15px; background: #ddd; padding: 5px 15px; font-size: 12px; border-radius: 5px;
+			}
+			#swimlane-chart {
+				#ceil-axis-container {
+
+				}
+				#floor-lane-container {
+					#separator-line { stroke: $swim-delimiter; }
+					.swimlane-lane {
+						stroke: $unactive-bar; stroke-width: 7;
+						&.swimlane-selected { stroke: $active-back; }
+					}
+				}
+			}
+			#datasets-wrapper {
+				display: none; overflow-x: hidden; overflow-y: auto; position: relative; top: 35px;
+				#datasets-container {
+					width: calc(100% - 20px); padding: 0px 15px 10px; @include clearfix();
+					div.data-container {
+						width: 100%; position: relative; @include clearfix();
+						div.data-title {
+							font-size: 14px; max-width: 40%; display: inline-block; float: left;
+							position: absolute; top: calc(50% - 14px);
+							background: white; padding-right: 10px;
+							span { font-weight: bolder; font-size: 16px; }
+						}
+						div.data-tags {
+							font-size: 12px; max-width: 55%; display: inline-block; float: right;
+							background: white;
+							div.data-tag {
+								border: 1px solid; padding: 5px 10px; border-radius: 15px; margin: 5px 5px; display: inline-block; float: right;
+								max-width: 225px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+							}
+						}
+						div.data-connect {
+							width: 100%; border-top: 2px dotted; position: absolute; top: calc(50% - 1px); z-index: -28;
+						}
+					}
+				}
+			}
+		}
+		#stacked-chart {
+			position: absolute; bottom: 0px;
+			#stacked-svg { background: $stacked-back; }
+		}
+	}
+}
+#spinnerOverlay {
+	width: 100%; height: 100%; background: #E9EEF2; position: fixed; z-index: 28; // display: none;
+}
