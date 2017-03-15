@@ -21,6 +21,8 @@ let freqTimeout, secTimeout;
 let freqTime	= 1000;
 let secTime		= 1750;
 
+let dialog;
+
 $(' #wrapper ').on('sector-change', (event, state, sector) => {
     clearTimeout(secTimeout);
 
@@ -62,7 +64,7 @@ $(document).on('click', '.type-button', (e) => {
     });
 });
 
-$(document).on('click', '.freq-button:not(#freq-showmore)', (e) => {
+$(' #wrapper ').on('click', '.freq-button:not(#freq-showmore)', (e) => {
 	clearTimeout(freqTimeout);
 
     let selected    = _.toInteger($(e.target).attr('value'));
@@ -86,7 +88,15 @@ $(document).on('click', '.freq-button:not(#freq-showmore)', (e) => {
 			spinner.stop();
 		});
 	}, freqTime);
+});
 
+$(' #dialog ').on('click', '.freq-button:not(#freq-showmore)', (e) => {
+    let selected    = _.toInteger($(e.target).attr('value'));
+	if ($('#dialog #freq-' + selected).hasClass('freq-unactive')) {
+		$('#dialog #freq-' + selected).removeClass('freq-unactive');
+	} else {
+		$('#dialog #freq-' + selected).addClass('freq-unactive');
+	}
 });
 
 $(document).on('click', '#button-changer', (e) => {
@@ -106,26 +116,34 @@ $(document).on('click', '#button-changer', (e) => {
 });
 
 $(document).on('click', '#freq-showmore', (e) => {
-	if ($(' .freq-overflow ').is(':visible')) {
-		$(' .freq-overflow ').hide();
-		$(' #freq-showmore ').html("more <i class='fa fa-angle-double-right' aria-hidden='true'></i>");
-
-		$(' #filter-time ').show();
-		$(' #filter-datatype ').show();
-	} else {
-		$(' .freq-overflow ').css('display', 'inline-block');
-		$(' #freq-showmore ').html("<i class='fa fa-angle-double-left' aria-hidden='true'></i> less");
-
-		$(' #filter-time ').hide();
-		$(' #filter-datatype ').hide();
-	}
+	$('#wrapper .freq-button').each(function() {
+		if ($(this).hasClass('freq-unactive')) {
+			$('#dialog #' + this.id).addClass('freq-unactive');
+		} else {
+			$('#dialog #' + this.id).removeClass('freq-unactive');
+		}
+	});
+	dialog.dialog( "open" );
+	// if ($(' .freq-overflow ').is(':visible')) {
+	// 	$(' .freq-overflow ').hide();
+	// 	$(' #freq-showmore ').html("more <i class='fa fa-angle-double-right' aria-hidden='true'></i>");
+	//
+	// 	$(' #filter-time ').show();
+	// 	$(' #filter-datatype ').show();
+	// } else {
+	// 	$(' .freq-overflow ').css('display', 'inline-block');
+	// 	$(' #freq-showmore ').html("<i class='fa fa-angle-double-left' aria-hidden='true'></i> less");
+	//
+	// 	$(' #filter-time ').hide();
+	// 	$(' #filter-datatype ').hide();
+	// }
 });
 
 function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, isRedraw, forceWidth, callback) {
 	async.waterfall([
 		function (waterfallCallback) {
-			$.get( baseURL + 'selector', { frequencies : JSON.stringify(activeFreq), datatype : filter.type, startDate, endDate, numtags }, (response) => {
-				tagChain    = _.chain(response.result).flatMap('tags').uniq();
+			$.get( baseURL + 'selector', { frequencies: JSON.stringify(activeFreq), datatype: filter.type, startDate, endDate, numtags }, (response) => {
+				tagChain    = _.chain(response.result.nodeData).flatMap('name').uniq();
 
 				if (tagChain.intersection(activeSec).size().value() == 0) {
 					activeSec = [tagChain.sortBy().head().value()];
@@ -134,13 +152,18 @@ function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, 
 				}
 
 				if (isForce) { createForce(response.result, activeSec); }
-				if (isSwimlane) { createSwimlane(response.result, activeSec, startDate, endDate, forceWidth); }
-				waterfallCallback(null, activeFreq, activeSec);
+				waterfallCallback(null, activeFreq, activeSec, tagChain.value());
+			});
+		},
+		function (localFreq, localSec, tags, waterfallCallback) {
+			$.get( baseURL + 'swimlane', { frequencies: JSON.stringify(localFreq), tags: JSON.stringify(tags), startDate, endDate }, (response) => {
+				if (isSwimlane) { createSwimlane(response.result, localSec, startDate, endDate, forceWidth); }
+				waterfallCallback(null, localFreq, localSec);
 			});
 		},
 		function (localFreq, localSec, waterfallCallback) {
 			if (isRedraw) {
-				$.get( baseURL + 'datasets', { frequencies : JSON.stringify(activeFreq), tags : JSON.stringify(activeSec) }, (response) => {
+				$.get( baseURL + 'datasets', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec) }, (response) => {
 					$(' #datasets-container ').html(
 						_.map(response.result, (o, idx) => (
 							"<div id='data-" + _.kebabCase(o.name) + "' class='data-container noselect cursor-default'>" +
@@ -157,7 +180,7 @@ function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, 
 		},
 		function (localFreq, localSec, waterfallCallback) {
 			if (isStacked) {
-				$.get( baseURL + 'stacked', { frequencies : JSON.stringify(activeFreq), tags : JSON.stringify(activeSec), datatype : filter.type, startDate, endDate }, (response) => {
+				$.get( baseURL + 'stacked', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec), datatype: filter.type, startDate, endDate }, (response) => {
 					createStacked(response.result, frequencies, freqColors);
 					waterfallCallback(null);
 				});
@@ -177,7 +200,7 @@ window.onload   = function() {
     $('#type-' + filter.type).addClass('type-active');
 
     let dateFormat  = 'dd MM yy';
-    let dateConfig  = { showOtherMonths: true, selectOtherMonths: true, changeMonth: true, changeYear: true, dateFormat : dateFormat }
+    let dateConfig  = { showOtherMonths: true, selectOtherMonths: true, changeMonth: true, changeYear: true, dateFormat: dateFormat }
     let fromPicker  = $(' #startpicker ').datepicker(dateConfig);
     let untilPicker = $(' #endpicker ').datepicker(dateConfig);
 
@@ -251,6 +274,45 @@ window.onload   = function() {
 		}
     });
 
+	dialog = $(' #dialog ').dialog({
+		autoOpen: false,
+		height: 300,
+		width: 450,
+		modal: true,
+		buttons: {
+			Submit: () => {
+				activeFreq	= [];
+				$('#dialog .freq-button').each(function() {
+					if ($(this).hasClass('freq-unactive')) {
+						$('#wrapper #' + this.id).addClass('freq-unactive');
+					} else {
+						$('#wrapper #' + this.id).removeClass('freq-unactive');
+						activeFreq.push(parseInt(this.id.substr(5)));
+					}
+				});
+
+				dialog.dialog( "close" );
+
+				let spinner     = new Spinner().spin(document.getElementById('root'));
+				$(' #spinnerOverlay ').show();
+
+				let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
+				let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
+				let numtags		= $( '#numtags-container' ).slider( 'value' );
+				fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
+					$(' #spinnerOverlay ').hide();
+					spinner.stop();
+				});
+			},
+			Cancel: () => {
+				dialog.dialog( "close" );
+			}
+		},
+		close: () => {
+			dialog.dialog( "close" );
+		}
+	});
+
     $.get( baseURL + 'config', (response) => {
         frequencies     = response.result.frequency;
         activeFreq      = _.chain(response.result.frequency).drop().take(6).value();
@@ -258,6 +320,7 @@ window.onload   = function() {
 		freqColors		= _.times(frequencies.length, (o) => ('#' + Math.random().toString(16).substr(2,6)));
 
         let stringFreq  = _.map(frequencies, (o, idx) => ("<div id='freq-" + o + "' class='freq-button noselect cursor-pointer" + (_.includes(activeFreq, o) ? '' : ' freq-unactive') + (idx >= (freqLimt - 1) ? ' freq-overflow' : '') + "' style='background : " + freqColors[idx] + "; border-color : " + freqColors[idx] + "; color : " + freqColors[idx] + "' value='" + o + "'>" + o + "</div>")).join('');
+		$(' #dialog-freq-container ').append(stringFreq);
 		stringFreq		+= "<div id='freq-showmore' class='freq-button noselect cursor-pointer'>more <i class='fa fa-angle-double-right' aria-hidden='true'></i></div>"
         $(' #frequency-container ').append(stringFreq);
 

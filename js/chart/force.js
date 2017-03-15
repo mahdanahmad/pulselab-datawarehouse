@@ -1,15 +1,10 @@
 function createForce(data, activeSec) {
     d3.select(' #graph-canvas ').remove();
-    let datasets    = _.chain(data);
-    let nodeData    = datasets.flatMap((o) => (_.map(o.tags, (tag) => ( { tag : tag, count : o.count } ), []))).groupBy('tag').map((val, key) => ({name : key, count : _.sumBy(val, 'count')})).value();
-    let linkData    = datasets.map('tags').flatMap((tags) => (_.reduce(tags, (result, value) => {
-        let data    = [];
-        if (_.size(result.tags) > 0) { _.forEach(result.tags, (o) => { data.push([o, value]); }); }
-        return { data : _.concat((result['data'] || (result['data'] = [])), data), tags : _.concat(result['tags'] || (result['tags'] = []), value) };
-    }, {}))['data']).groupBy((o) => (o)).map((val, key) => ({ source : key.split(',')[0], target : key.split(',')[1], count : _.size(val) })).value();
+    let nodeData    = data.nodeData;
+    let linkData    = data.linkData;
 
     let radiusrange = [15, 35];
-    let linkrange   = [35, 15];
+    let linkrange   = [150, 100];
     let padding     = { top: 5, right: 15, bottom: 0, left: 15 };
     let width       = Math.floor($(' #graph-container ').outerWidth(true)) - padding.right - padding.left;
     let height      = Math.floor($(' #graph-container ').outerHeight(true)) - padding.top - padding.bottom;

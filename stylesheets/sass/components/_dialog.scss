@@ -1,0 +1,21 @@
+.ui-dialog-titlebar {
+	font-family: "TradeGothic-Bold"; font-size: 18px; background: white!important;
+}
+#dialog {
+	#dialog-freq-container {
+		.freq-button {
+			display: inline-block; font-size: 12px; width: calc(19% - 2px); text-align: center; color: $active-color!important; padding: 5px 0px; margin: 0.5%; border-radius: 7px; border: 1px solid; font-family: "TradeGothic-CondEighteen";
+			&.freq-unactive { background: $active-color!important; color: black!important; }
+		}
+	}
+}
+.ui-dialog-buttonpane {
+	padding: 10px 5px!important;
+	.ui-dialog-buttonset {
+		width: 100%; @include clearfix();
+		button {
+			width: 48%; float: left; margin: 0px 1%!important; font-size: 12px; height: 35px;
+			&:first-child { background: $active-back; color: $active-color; }
+		}
+	}
+}

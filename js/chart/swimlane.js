@@ -1,9 +1,11 @@
 function createSwimlane(data, activeSec, startDate, endDate, forceWidth) {
     d3.select(' #swimlane-canvas ').remove();
-    let datasets    = _.chain(data).flatMap('tags').uniq();
+    let datasets    = _.chain(data).flatMap('tag').uniq();
     let sectorsLeft = datasets.difference(activeSec).sortBy().value();
     let activeLeft  = datasets.intersection(activeSec).sortBy().value();
 	let localSec	= _.clone(activeLeft);
+
+	let countSec	= _.chain(data).keyBy('tag').mapValues('count').value();
 
     if (activeLeft.length > 0) {
         let sectors     = _.concat(activeLeft, sectorsLeft);
@@ -55,16 +57,13 @@ function createSwimlane(data, activeSec, startDate, endDate, forceWidth) {
                 .attr('id', 'floor-lane-svg');
 
         let swimlanePaths   = {};
-        _.forEach(data, (o) => {
-            _.forEach(o.data, (d) => {
-                _.forEach(o.tags, (t) => {
-                    if (_.isNil(swimlanePaths[t])) { swimlanePaths[t] = d3.path(); }
-
-                    swimlanePaths[t].moveTo(sectorWidth + x(d3DateParse(moment(d.s).isAfter(startDate) ? d.s : startDate)), (laneHeight * 0.5));
-                    swimlanePaths[t].lineTo(sectorWidth + x(d3DateParse(moment(moment(d.e).isBefore(endDate) ? d.e : endDate).add(1, 'd').format('YYYY-MM-DD'))), (laneHeight * 0.5));
-                })
-            });
-        });
+		_.forEach(data, (o) => {
+			swimlanePaths[o.tag]	= d3.path();
+			_.forEach(o.range, (d) => {
+				swimlanePaths[o.tag].moveTo(sectorWidth + x(d3DateParse(moment(d.startDate).isAfter(startDate) ? d.startDate : startDate)), (laneHeight * 0.5));
+				swimlanePaths[o.tag].lineTo(sectorWidth + x(d3DateParse(moment(moment(d.endDate).isBefore(endDate) ? d.endDate : endDate).add(1, 'd').format('YYYY-MM-DD'))), (laneHeight * 0.5));
+			});
+		});
 
         let separatorPath   = d3.path();
         _.forEach(sectors, (sector, idx) => {
@@ -82,7 +81,7 @@ function createSwimlane(data, activeSec, startDate, endDate, forceWidth) {
                 .attr('transform', (d, i) => ('translate(0,' + (i * laneHeight) + ')'));
 
         groups.append('text')
-            .text((d) => (d))
+            .text((d) => (d + ' (' + countSec[d] + ')'))
             .attr('class', 'lane-sector noselect cursor-default')
             .attr('x', 5)
             .attr('y', 17)

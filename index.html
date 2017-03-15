@@ -23,6 +23,10 @@
     <title>A Dashboard</title>
 </head>
 <body>
+	<div id="dialog" title="Frequency filter">
+		<div id="dialog-freq-container"></div>
+	</div>
+
     <div id="root">
         <div id="spinnerOverlay"></div>
         <div id="wrapper">
@@ -35,7 +39,7 @@
 						<div class="filter-head cursor-default noselect">Time filter</div>
 						<div id="timepicker-container">
 							<div id="time-value">
-								<input type="text" id="startpicker" class="cursor-pointer"><span class="cursor-default"> - </span><input type="text" id="endpicker" class="cursor-pointer">
+								<input type="text" id="startpicker" class="cursor-pointer"><div id="date-separator" class="cursor-default"> - </div><input type="text" id="endpicker" class="cursor-pointer">
 							</div>
 						</div>
 					</div>
@@ -60,14 +64,14 @@
 			</div>
 			<div id="selector-container">
 				<div id="relations-container">
-					<div id="graph-container">
-						<div id="graph-chart"></div>
-					</div>
 					<div id="filter-numtags">
-						<div id="numtags-head cursor-default noselect">Number of Tags</div>
+						<div id="numtags-head" class="cursor-default noselect">Number of Tags</div>
 						<div id="numtags-container">
 							<div id="numtags-handle" class="ui-slider-handle noselect"></div>
 						</div>
+					</div>
+					<div id="graph-container">
+						<div id="graph-chart"></div>
 					</div>
 				</div>
 				<div id="swimlane-container">
