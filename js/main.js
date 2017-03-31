@@ -258,7 +258,7 @@ window.onload   = function() {
 		orientation: "horizontal",
       	range: "min",
 		max:100,
-		min:1,
+		min:2,
 		create: () => { $( '#numtags-handle' ).text( numtagsValue ); },
 		slide: ( event, ui ) => { $( '#numtags-handle' ).text( ui.value ); },
 		stop: ( event, ui ) => {
@@ -267,7 +267,7 @@ window.onload   = function() {
 
 			let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
 			let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-			fetchData(ui.value, startDate, endDate, true, true, true, true, () => {
+			fetchData(ui.value, startDate, endDate, true, true, true, true, null, () => {
 				$(' #spinnerOverlay ').hide();
 				spinner.stop();
 			});
