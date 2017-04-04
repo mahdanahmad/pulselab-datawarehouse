@@ -3,6 +3,10 @@ let radio       = [
     { title : 'Rows', value : 'rows' },
     { title : 'Filesize (in MB)', value : 'filesize' },
 ];
+let datasources	= [
+	{ title : 'data.humdata.org', value : 'data.humdata.org' },
+	{ title : 'data.go.id', value : 'data.go.id' },
+];
 
 let baseURL     = "http://139.59.230.55:3010/";
 // let baseURL     = "http://localhost:3010/";
@@ -12,9 +16,10 @@ let frequencies = [];
 let freqColors  = [];
 let activeFreq  = [];
 let activeSec   = [];
-let freqLimt	= 10;
+let freqLimt	= 5;
 let filter      = {
     type        : null,
+	source		: null,
 }
 
 let freqTimeout, secTimeout;
@@ -47,12 +52,20 @@ $(' #wrapper ').on('sector-change', (event, state, sector) => {
 
 });
 
+$(document).on('click', '.source-button', (e) => {
+    filter.source	= $(e.target).attr('value');
+    $(' #sources-container .type-active ').removeClass('type-active');
+    $('#source-' + _.kebabCase(filter.source)).addClass('type-active');
+
+    initData(() => {});
+});
+
 $(document).on('click', '.type-button', (e) => {
     let spinner     = new Spinner().spin(document.getElementById('root'));
     $(' #spinnerOverlay ').show();
 
     filter.type     = $(e.target).attr('value');
-    $(' .type-active ').removeClass('type-active');
+    $(' #types-container .type-active ').removeClass('type-active');
     $('#type-' + filter.type).addClass('type-active');
 
     let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
@@ -124,25 +137,12 @@ $(document).on('click', '#freq-showmore', (e) => {
 		}
 	});
 	dialog.dialog( "open" );
-	// if ($(' .freq-overflow ').is(':visible')) {
-	// 	$(' .freq-overflow ').hide();
-	// 	$(' #freq-showmore ').html("more <i class='fa fa-angle-double-right' aria-hidden='true'></i>");
-	//
-	// 	$(' #filter-time ').show();
-	// 	$(' #filter-datatype ').show();
-	// } else {
-	// 	$(' .freq-overflow ').css('display', 'inline-block');
-	// 	$(' #freq-showmore ').html("<i class='fa fa-angle-double-left' aria-hidden='true'></i> less");
-	//
-	// 	$(' #filter-time ').hide();
-	// 	$(' #filter-datatype ').hide();
-	// }
 });
 
 function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, isRedraw, forceWidth, callback) {
 	async.waterfall([
 		function (waterfallCallback) {
-			$.get( baseURL + 'selector', { frequencies: JSON.stringify(activeFreq), datatype: filter.type, startDate, endDate, numtags }, (response) => {
+			$.get( baseURL + 'selector', { frequencies: JSON.stringify(activeFreq), datatype: filter.type, source: filter.source, startDate, endDate, numtags }, (response) => {
 				tagChain    = _.chain(response.result.nodeData).flatMap('name').uniq();
 
 				if (tagChain.intersection(activeSec).size().value() == 0) {
@@ -156,14 +156,14 @@ function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, 
 			});
 		},
 		function (localFreq, localSec, tags, waterfallCallback) {
-			$.get( baseURL + 'swimlane', { frequencies: JSON.stringify(localFreq), tags: JSON.stringify(tags), startDate, endDate }, (response) => {
+			$.get( baseURL + 'swimlane', { frequencies: JSON.stringify(localFreq), tags: JSON.stringify(tags), source: filter.source, startDate, endDate }, (response) => {
 				if (isSwimlane) { createSwimlane(response.result, localSec, startDate, endDate, forceWidth); }
 				waterfallCallback(null, localFreq, localSec);
 			});
 		},
 		function (localFreq, localSec, waterfallCallback) {
 			if (isRedraw) {
-				$.get( baseURL + 'datasets', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec) }, (response) => {
+				$.get( baseURL + 'datasets', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec), source: filter.source }, (response) => {
 					$(' #datasets-container ').html(
 						_.map(response.result, (o, idx) => (
 							"<div id='data-" + _.kebabCase(o.name) + "' class='data-container noselect cursor-default'>" +
@@ -180,7 +180,7 @@ function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, 
 		},
 		function (localFreq, localSec, waterfallCallback) {
 			if (isStacked) {
-				$.get( baseURL + 'stacked', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec), datatype: filter.type, startDate, endDate }, (response) => {
+				$.get( baseURL + 'stacked', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec), datatype: filter.type, source: filter.source, startDate, endDate }, (response) => {
 					createStacked(response.result, frequencies, freqColors);
 					waterfallCallback(null);
 				});
@@ -191,12 +191,41 @@ function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, 
 	], (err) => { callback(); });
 }
 
-window.onload   = function() {
-    let spinner     = new Spinner().spin(document.getElementById('root'));
+function initData(callback) {
+	let spinner	= new Spinner().spin(document.getElementById('root'));
+	$(' #spinnerOverlay ').show();
 
-    let stringType  = _.map(radio, (o) => ("<div id='type-" + o.value + "' class='type-button noselect cursor-pointer' value='" + o.value + "'>" + o.title + "</div>")).join('');
+	$.get( baseURL + 'config', { source: filter.source },  (response) => {
+        frequencies     = response.result.frequency;
+        activeFreq      = _.chain(response.result.frequency).drop().take(6).value();
+
+		freqColors		= _.times(frequencies.length, (o) => ('#' + Math.random().toString(16).substr(2,6)));
+
+        let stringFreq  = _.map(frequencies, (o, idx) => ("<div id='freq-" + o + "' class='freq-button noselect cursor-pointer" + (_.includes(activeFreq, o) ? '' : ' freq-unactive') + (idx >= (freqLimt - 1) ? ' freq-overflow' : '') + "' style='background : " + freqColors[idx] + "; border-color : " + freqColors[idx] + "; color : " + freqColors[idx] + "' value='" + o + "'>" + o + "</div>")).join('');
+		$(' #dialog-freq-container ').html(stringFreq);
+		stringFreq		+= "<div id='freq-showmore' class='freq-button noselect cursor-pointer'>more <i class='fa fa-angle-double-right' aria-hidden='true'></i></div>"
+        $(' #frequency-container ').html(stringFreq);
+
+		let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
+		let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
+		let numtags		= $( '#numtags-container' ).slider( 'value' );
+		fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
+            $(' #spinnerOverlay ').css('opacity', '0.7');
+            $(' #spinnerOverlay ').hide();
+            spinner.stop();
+        });
+    });
+}
+
+window.onload   = function() {
+	let stringSrc	= _.map(datasources, (o) => ("<div id='source-" + _.kebabCase(o.value) + "' class='source-button noselect cursor-pointer' value='" + o.value + "'>" + o.title + "</div>")).join('');
+	$(' #sources-container ').append(stringSrc);
+	filter.source     = _.head(datasources).value;
+	$('#source-' + _.kebabCase(filter.source)).addClass('type-active');
+
+    let stringType	= _.map(radio, (o) => ("<div id='type-" + o.value + "' class='type-button noselect cursor-pointer' value='" + o.value + "'>" + o.title + "</div>")).join('');
     $(' #types-container ').append(stringType);
-    filter.type     = _.head(radio).value;
+    filter.type		= _.head(radio).value;
     $('#type-' + filter.type).addClass('type-active');
 
     let dateFormat  = 'dd MM yy';
@@ -313,26 +342,7 @@ window.onload   = function() {
 		}
 	});
 
-    $.get( baseURL + 'config', (response) => {
-        frequencies     = response.result.frequency;
-        activeFreq      = _.chain(response.result.frequency).drop().take(6).value();
-
-		freqColors		= _.times(frequencies.length, (o) => ('#' + Math.random().toString(16).substr(2,6)));
-
-        let stringFreq  = _.map(frequencies, (o, idx) => ("<div id='freq-" + o + "' class='freq-button noselect cursor-pointer" + (_.includes(activeFreq, o) ? '' : ' freq-unactive') + (idx >= (freqLimt - 1) ? ' freq-overflow' : '') + "' style='background : " + freqColors[idx] + "; border-color : " + freqColors[idx] + "; color : " + freqColors[idx] + "' value='" + o + "'>" + o + "</div>")).join('');
-		$(' #dialog-freq-container ').append(stringFreq);
-		stringFreq		+= "<div id='freq-showmore' class='freq-button noselect cursor-pointer'>more <i class='fa fa-angle-double-right' aria-hidden='true'></i></div>"
-        $(' #frequency-container ').append(stringFreq);
-
-        let startDate   = $.datepicker.formatDate('yy-mm-dd', fromPicker.datepicker('getDate'));
-        let endDate     = $.datepicker.formatDate('yy-mm-dd', untilPicker.datepicker('getDate'));
-		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
-            $(' #spinnerOverlay ').css('opacity', '0.7');
-            $(' #spinnerOverlay ').hide();
-            spinner.stop();
-        });
-    });
+	initData(() => {});
 
     function redrawOnDatepickerChange() {
         let spinner     = new Spinner().spin(document.getElementById('root'));
