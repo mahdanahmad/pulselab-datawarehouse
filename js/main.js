@@ -53,28 +53,32 @@ $(' #wrapper ').on('sector-change', (event, state, sector) => {
 });
 
 $(document).on('click', '.source-button', (e) => {
-    filter.source	= $(e.target).attr('value');
-    $(' #sources-container .type-active ').removeClass('type-active');
-    $('#source-' + _.kebabCase(filter.source)).addClass('type-active');
+	if (filter.source !== $(e.target).attr('value')) {
+		filter.source	= $(e.target).attr('value');
+		$(' #sources-container .type-active ').removeClass('type-active');
+		$('#source-' + _.kebabCase(filter.source)).addClass('type-active');
 
-    initData(() => {});
+		initData(() => {});
+	}
 });
 
 $(document).on('click', '.type-button', (e) => {
-    let spinner     = new Spinner().spin(document.getElementById('root'));
-    $(' #spinnerOverlay ').show();
+	if (filter.type !== $(e.target).attr('value')) {
+		let spinner     = new Spinner().spin(document.getElementById('root'));
+		$(' #spinnerOverlay ').show();
 
-    filter.type     = $(e.target).attr('value');
-    $(' #types-container .type-active ').removeClass('type-active');
-    $('#type-' + filter.type).addClass('type-active');
+		filter.type     = $(e.target).attr('value');
+		$(' #types-container .type-active ').removeClass('type-active');
+		$('#type-' + filter.type).addClass('type-active');
 
-    let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
-    let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-	let numtags		= $( '#numtags-container' ).slider( 'value' );
-	fetchData(numtags, startDate, endDate, true, false, true, false, null, () => {
-        $(' #spinnerOverlay ').hide();
-        spinner.stop();
-    });
+		let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
+		let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
+		let numtags		= $( '#numtags-container' ).slider( 'value' );
+		fetchData(numtags, startDate, endDate, true, false, true, false, null, () => {
+			$(' #spinnerOverlay ').hide();
+			spinner.stop();
+		});
+	}
 });
 
 $(' #wrapper ').on('click', '.freq-button:not(#freq-showmore)', (e) => {
