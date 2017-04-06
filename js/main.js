@@ -8,8 +8,8 @@ let datasources	= [
 	{ title : 'data.go.id', value : 'data.go.id' },
 ];
 
-// let baseURL     = "http://139.59.230.55:3010/";
-let baseURL     = "http://localhost:3010/";
+let baseURL     = "http://139.59.230.55:3010/";
+// let baseURL     = "http://localhost:3010/";
 
 let frequencies = [];
 // let freqColors  = ['#BBCDA3', '#055C81', '#B13C3D', '#CCB40C', '#DA9F93'];
