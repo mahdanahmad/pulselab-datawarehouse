@@ -14,7 +14,7 @@
 					width: 300px; margin: auto;
 					.source-button {
 						width: calc(50% - 2px); display: inline-block; font-size: 12px; text-align: center; background: white; border-radius: 3px; margin: 1px; line-height: 25px;
-						&.type-active { background: $active-back; color: $active-color; }
+						&.source-active { background: $active-back; color: $active-color; }
 					}
 				}
 				#timepicker-container {

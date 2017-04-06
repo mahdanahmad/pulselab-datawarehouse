@@ -8,8 +8,8 @@ let datasources	= [
 	{ title : 'data.go.id', value : 'data.go.id' },
 ];
 
-let baseURL     = "http://139.59.230.55:3010/";
-// let baseURL     = "http://localhost:3010/";
+// let baseURL     = "http://139.59.230.55:3010/";
+let baseURL     = "http://localhost:3010/";
 
 let frequencies = [];
 // let freqColors  = ['#BBCDA3', '#055C81', '#B13C3D', '#CCB40C', '#DA9F93'];
@@ -53,13 +53,22 @@ $(' #wrapper ').on('sector-change', (event, state, sector) => {
 });
 
 $(document).on('click', '.source-button', (e) => {
-	if (filter.source !== $(e.target).attr('value')) {
-		filter.source	= $(e.target).attr('value');
-		$(' #sources-container .type-active ').removeClass('type-active');
-		$('#source-' + _.kebabCase(filter.source)).addClass('type-active');
+		let target	= $(e.target).attr('value');
 
-		initData(() => {});
-	}
+		if (_.includes(filter.source, target)) {
+			if (filter.source.length > 1) {
+				_.pull(filter.source, target);
+				$('#source-' + _.kebabCase(target)).removeClass('source-active');
+
+				initData(() => {});
+			}
+		} else {
+			filter.source.push(target);
+			$('#source-' + _.kebabCase(target)).addClass('source-active');
+
+			initData(() => {});
+		}
+
 });
 
 $(document).on('click', '.type-button', (e) => {
@@ -146,7 +155,7 @@ $(document).on('click', '#freq-showmore', (e) => {
 function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, isRedraw, forceWidth, callback) {
 	async.waterfall([
 		function (waterfallCallback) {
-			$.get( baseURL + 'selector', { frequencies: JSON.stringify(activeFreq), datatype: filter.type, source: filter.source, startDate, endDate, numtags }, (response) => {
+			$.get( baseURL + 'selector', { frequencies: JSON.stringify(activeFreq), datatype: filter.type, source: JSON.stringify(filter.source), startDate, endDate, numtags }, (response) => {
 				tagChain    = _.chain(response.result.nodeData).flatMap('name').uniq();
 
 				if (tagChain.intersection(activeSec).size().value() == 0) {
@@ -160,14 +169,14 @@ function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, 
 			});
 		},
 		function (localFreq, localSec, tags, waterfallCallback) {
-			$.get( baseURL + 'swimlane', { frequencies: JSON.stringify(localFreq), tags: JSON.stringify(tags), source: filter.source, startDate, endDate }, (response) => {
+			$.get( baseURL + 'swimlane', { frequencies: JSON.stringify(localFreq), tags: JSON.stringify(tags), source: JSON.stringify(filter.source), startDate, endDate }, (response) => {
 				if (isSwimlane) { createSwimlane(response.result, localSec, startDate, endDate, forceWidth); }
 				waterfallCallback(null, localFreq, localSec);
 			});
 		},
 		function (localFreq, localSec, waterfallCallback) {
 			if (isRedraw) {
-				$.get( baseURL + 'datasets', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec), source: filter.source }, (response) => {
+				$.get( baseURL + 'datasets', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec), source: JSON.stringify(filter.source) }, (response) => {
 					$(' #datasets-container ').html(
 						_.map(response.result, (o, idx) => (
 							"<div id='data-" + _.kebabCase(o.name) + "' class='data-container noselect cursor-default'>" +
@@ -184,7 +193,7 @@ function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, 
 		},
 		function (localFreq, localSec, waterfallCallback) {
 			if (isStacked) {
-				$.get( baseURL + 'stacked', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec), datatype: filter.type, source: filter.source, startDate, endDate }, (response) => {
+				$.get( baseURL + 'stacked', { frequencies: JSON.stringify(activeFreq), tags: JSON.stringify(activeSec), datatype: filter.type, source: JSON.stringify(filter.source), startDate, endDate }, (response) => {
 					createStacked(response.result, frequencies, freqColors);
 					waterfallCallback(null);
 				});
@@ -199,7 +208,7 @@ function initData(callback) {
 	let spinner	= new Spinner().spin(document.getElementById('root'));
 	$(' #spinnerOverlay ').show();
 
-	$.get( baseURL + 'config', { source: filter.source },  (response) => {
+	$.get( baseURL + 'config', { source: JSON.stringify(filter.source) },  (response) => {
         frequencies     = response.result.frequency;
         activeFreq      = _.chain(response.result.frequency).drop().take(6).value();
 
@@ -222,10 +231,10 @@ function initData(callback) {
 }
 
 window.onload   = function() {
-	let stringSrc	= _.map(datasources, (o) => ("<div id='source-" + _.kebabCase(o.value) + "' class='source-button noselect cursor-pointer' value='" + o.value + "'>" + o.title + "</div>")).join('');
+	let stringSrc	= _.map(datasources, (o) => ("<div id='source-" + _.kebabCase(o.value) + "' class='source-button source-active noselect cursor-pointer' value='" + o.value + "'>" + o.title + "</div>")).join('');
 	$(' #sources-container ').append(stringSrc);
-	filter.source     = _.head(datasources).value;
-	$('#source-' + _.kebabCase(filter.source)).addClass('type-active');
+	filter.source     = _.map(datasources, 'value');
+	// $('#source-' + _.kebabCase(filter.source)).addClass('');
 
     let stringType	= _.map(radio, (o) => ("<div id='type-" + o.value + "' class='type-button noselect cursor-pointer' value='" + o.value + "'>" + o.title + "</div>")).join('');
     $(' #types-container ').append(stringType);
