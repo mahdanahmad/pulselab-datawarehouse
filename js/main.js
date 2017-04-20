@@ -8,8 +8,8 @@ let datasources	= [
 	{ title : 'data.go.id', value : 'data.go.id' },
 ];
 
-// let baseURL     = "http://139.59.230.55:3010/";
-let baseURL     = "http://localhost:3010/";
+let baseURL     = "http://139.59.230.55:3010/";
+// let baseURL     = "http://localhost:3010/";
 
 let frequencies = [];
 let locations	= [];
@@ -143,21 +143,6 @@ $(document).on('click', '#freq-showmore', (e) => {
 		}
 	});
 	dialog.dialog( "open" );
-});
-
-$('#typeahead-container .typeahead').bind('typeahead:change', function(ev, val) {
-	console.log(val);
-	if (val == "") {
-		activeLoc	= null;
-
-		let spinner     = new Spinner().spin(document.getElementById('root'));
-		$(' #spinnerOverlay ').show();
-
-		fetchData(null, true, true, true, true, null, () => {
-			$(' #spinnerOverlay ').hide();
-			spinner.stop();
-		});
-	}
 });
 
 $('#typeahead-container .typeahead').bind('typeahead:select', function(ev, val) {
