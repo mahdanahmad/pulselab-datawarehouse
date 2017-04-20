@@ -8,10 +8,12 @@ let datasources	= [
 	{ title : 'data.go.id', value : 'data.go.id' },
 ];
 
-let baseURL     = "http://139.59.230.55:3010/";
-// let baseURL     = "http://localhost:3010/";
+// let baseURL     = "http://139.59.230.55:3010/";
+let baseURL     = "http://localhost:3010/";
 
 let frequencies = [];
+let locations	= [];
+let activeLoc	= null;
 // let freqColors  = ['#BBCDA3', '#055C81', '#B13C3D', '#CCB40C', '#DA9F93'];
 let freqColors  = [];
 let activeFreq  = [];
@@ -41,10 +43,7 @@ $(' #wrapper ').on('sector-change', (event, state, sector) => {
 		let spinner     = new Spinner().spin(document.getElementById('root'));
 		$(' #spinnerOverlay ').show();
 
-		let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
-		let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, false, false, true, true, null, () => {
+		fetchData(null, false, false, true, true, null, () => {
 			$(' #spinnerOverlay ').hide();
 			spinner.stop();
 		});
@@ -80,10 +79,7 @@ $(document).on('click', '.type-button', (e) => {
 		$(' #types-container .type-active ').removeClass('type-active');
 		$('#type-' + filter.type).addClass('type-active');
 
-		let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
-		let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, true, false, true, false, null, () => {
+		fetchData(null, true, false, true, false, null, () => {
 			$(' #spinnerOverlay ').hide();
 			spinner.stop();
 		});
@@ -106,10 +102,7 @@ $(' #wrapper ').on('click', '.freq-button:not(#freq-showmore)', (e) => {
 		let spinner     = new Spinner().spin(document.getElementById('root'));
 		$(' #spinnerOverlay ').show();
 
-		let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
-		let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
+		fetchData(null, true, true, true, true, null, () => {
 			$(' #spinnerOverlay ').hide();
 			spinner.stop();
 		});
@@ -152,10 +145,57 @@ $(document).on('click', '#freq-showmore', (e) => {
 	dialog.dialog( "open" );
 });
 
-function fetchData(numtags, startDate, endDate, isForce, isSwimlane, isStacked, isRedraw, forceWidth, callback) {
+$('#typeahead-container .typeahead').bind('typeahead:change', function(ev, val) {
+	console.log(val);
+	if (val == "") {
+		activeLoc	= null;
+
+		let spinner     = new Spinner().spin(document.getElementById('root'));
+		$(' #spinnerOverlay ').show();
+
+		fetchData(null, true, true, true, true, null, () => {
+			$(' #spinnerOverlay ').hide();
+			spinner.stop();
+		});
+	}
+});
+
+$('#typeahead-container .typeahead').bind('typeahead:select', function(ev, val) {
+	if (_.includes(locations, val)) {
+		activeLoc	= val;
+
+		let spinner     = new Spinner().spin(document.getElementById('root'));
+		$(' #spinnerOverlay ').show();
+
+		fetchData(null, true, true, true, true, null, () => {
+			$(' #spinnerOverlay ').hide();
+			spinner.stop();
+		});
+	}
+});
+
+$('#typeahead-container .typeahead').bind('typeahead:autocomplete', function(ev, val) {
+	if (_.includes(locations, val)) {
+		activeLoc	= val;
+
+		let spinner     = new Spinner().spin(document.getElementById('root'));
+		$(' #spinnerOverlay ').show();
+
+		fetchData(null, true, true, true, true, null, () => {
+			$(' #spinnerOverlay ').hide();
+			spinner.stop();
+		});
+	}
+});
+
+function fetchData(numoftags, isForce, isSwimlane, isStacked, isRedraw, forceWidth, callback) {
+	let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
+	let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
+	let numtags		= !_.isNil(numoftags) ? numoftags : $( '#numtags-container' ).slider( 'value' );
+
 	async.waterfall([
 		function (waterfallCallback) {
-			$.get( baseURL + 'selector', { frequencies: JSON.stringify(activeFreq), datatype: filter.type, source: JSON.stringify(filter.source), startDate, endDate, numtags }, (response) => {
+			$.get( baseURL + 'selector', _.omitBy({ frequencies: JSON.stringify(activeFreq), datatype: filter.type, source: JSON.stringify(filter.source), startDate, endDate, numtags, location: activeLoc }, _.isNil), (response) => {
 				tagChain    = _.chain(response.result.nodeData).flatMap('name').uniq();
 
 				if (tagChain.intersection(activeSec).size().value() == 0) {
@@ -209,7 +249,10 @@ function initData(callback) {
 	$(' #spinnerOverlay ').show();
 
 	$.get( baseURL + 'config', { source: JSON.stringify(filter.source) },  (response) => {
-        frequencies     = response.result.frequency;
+		activeLoc		= null;
+
+		frequencies     = response.result.frequency;
+		locations		= response.result.location;
         activeFreq      = _.chain(response.result.frequency).drop().take(6).value();
 
 		freqColors		= _.times(frequencies.length, (o) => ('#' + Math.random().toString(16).substr(2,6)));
@@ -219,16 +262,32 @@ function initData(callback) {
 		stringFreq		+= "<div id='freq-showmore' class='freq-button noselect cursor-pointer'>more <i class='fa fa-angle-double-right' aria-hidden='true'></i></div>"
         $(' #frequency-container ').html(stringFreq);
 
-		let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
-		let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
+		$('#typeahead-container .typeahead').typeahead('destroy');
+		$('#typeahead-container .typeahead').typeahead({ hint: true, minLength: 1 }, { name: 'location', source: substringMatcher(response.result.location) });
+		$('#typeahead-container .typeahead').typeahead('val', '');
+
+		fetchData(null, true, true, true, true, null, () => {
             $(' #spinnerOverlay ').css('opacity', '0.7');
             $(' #spinnerOverlay ').hide();
             spinner.stop();
         });
     });
 }
+
+function substringMatcher(strs) {
+	return function findMatches(q, callback) {
+		// an array that will be populated with substring matches
+		let matches = [];
+		// regex used to determine if a string contains the substring `q`
+		let substrRegex = new RegExp(q, 'i');
+
+		// iterate through the pool of strings and for any string that
+		// contains the substring `q`, add it to the `matches` array
+		$.each(strs, (i, str) => { if (substrRegex.test(str)) { matches.push(str); } });
+
+		callback(matches);
+	};
+};
 
 window.onload   = function() {
 	let stringSrc	= _.map(datasources, (o) => ("<div id='source-" + _.kebabCase(o.value) + "' class='source-button source-active noselect cursor-pointer' value='" + o.value + "'>" + o.title + "</div>")).join('');
@@ -246,7 +305,7 @@ window.onload   = function() {
     let fromPicker  = $(' #startpicker ').datepicker(dateConfig);
     let untilPicker = $(' #endpicker ').datepicker(dateConfig);
 
-    $(' #filter-wrapper ').height($(' #wrapper ').outerHeight(true) / 2);
+    // $(' #filter-wrapper ').height($(' #wrapper ').outerHeight(true) / 2);
 
     // $(' #datasets-wrapper ').width($(' #chart-container ').outerWidth(true));
     // $(' #datasets-wrapper ').height($(' #wrapper ').outerHeight(true) / 2 - 40);
@@ -284,10 +343,7 @@ window.onload   = function() {
 			let spinner     = new Spinner().spin(document.getElementById('root'));
 			$(' #spinnerOverlay ').show();
 
-			let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
-			let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-			let numtags		= $( '#numtags-container' ).slider( 'value' );
-			fetchData(numtags, startDate, endDate, true, true, false, false, ui.helper.width(), () => {
+			fetchData(null, true, true, false, false, ui.helper.width(), () => {
 				$(' #spinnerOverlay ').hide();
 				spinner.stop();
 			});
@@ -307,9 +363,7 @@ window.onload   = function() {
 			let spinner     = new Spinner().spin(document.getElementById('root'));
 			$(' #spinnerOverlay ').show();
 
-			let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
-			let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-			fetchData(ui.value, startDate, endDate, true, true, true, true, null, () => {
+			fetchData(ui.value, true, true, true, true, null, () => {
 				$(' #spinnerOverlay ').hide();
 				spinner.stop();
 			});
@@ -338,10 +392,7 @@ window.onload   = function() {
 				let spinner     = new Spinner().spin(document.getElementById('root'));
 				$(' #spinnerOverlay ').show();
 
-				let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
-				let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-				let numtags		= $( '#numtags-container' ).slider( 'value' );
-				fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
+				fetchData(null, true, true, true, true, null, () => {
 					$(' #spinnerOverlay ').hide();
 					spinner.stop();
 				});
@@ -361,10 +412,7 @@ window.onload   = function() {
         let spinner     = new Spinner().spin(document.getElementById('root'));
         $(' #spinnerOverlay ').show();
 
-        let startDate   = $.datepicker.formatDate('yy-mm-dd', $(' #startpicker ').datepicker('getDate'));
-        let endDate     = $.datepicker.formatDate('yy-mm-dd', $(' #endpicker ').datepicker('getDate'));
-		let numtags		= $( '#numtags-container' ).slider( 'value' );
-		fetchData(numtags, startDate, endDate, true, true, true, true, null, () => {
+		fetchData(null, true, true, true, true, null, () => {
             $(' #spinnerOverlay ').hide();
             spinner.stop();
         });
